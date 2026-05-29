@@ -8,7 +8,7 @@ library(ggplot2)
 library(ggpubr)
 library(viridis)
 
-setwd("/home/aly/Beetles/Biodiversity")
+setwd("/home/aly/Beetles/BeetleBiodiversity")
 
 data(data_beetle)
 
@@ -30,100 +30,100 @@ all_completeness <- data.frame()
 all_abundance <- data.frame()
 
 #### Loop through years ####
-for(i in 2018:2025){
-  
-  cat("Processing year:", i, "\n")
-  
-  #### Filter yearly data ####
-  df_counts <- df %>%
-    filter(
-      !is.na(Species),
-      variable_name == "abundance",
-      observation_datetime >= paste0(i, "-01-01"),
-      observation_datetime <= paste0(i, "-12-31")
-    ) %>%
-    mutate(
-      trappingDays = as.numeric(trappingDays),
-      count_est = round(value * trappingDays)
-    )
-  
-  #### Skip years with no data ####
-  if(nrow(df_counts) == 0){
-    next
-  }
-  
-  #### Build site list for iNEXT ####
-  site_list <- df_counts %>%
-    group_by(siteID, Species) %>%
-    summarise(abundance = sum(count_est), .groups = "drop") %>%
-    group_split(siteID) %>%
-    setNames(unique(
-      df_counts %>%
-        arrange(siteID) %>%
-        pull(siteID) %>%
-        unique()
-    )) %>%
-    lapply(function(x) x$abundance[x$abundance > 0])
-  
-  #### Run iNEXT ####
-  iNEXT_sites <- iNEXT(
-    site_list,
-    q = 0,
-    datatype = "abundance"
-  )
-  
-  #### Create rarefaction plot ####
-  p <- ggiNEXT(iNEXT_sites, type = 1) +
-    theme_pubr() +
-    xlab("Number of Individuals") +
-    scale_x_continuous(labels = scales::label_number(accuracy = 1)) +
-    theme(legend.position = "none") +
-    facet_wrap(. ~ Assemblage, nrow = 4, scales = "free")
-  
-  #### Save plot ####
-  png(
-    filename = paste0("./Figures/Rarefaction/Rarefaction_", i, ".png"),
-    width = 20,
-    height = 6,
-    units = "in",
-    res = 300
-  )
-  
-  print(p)
-  
-  dev.off()
-  
-  #### Extract completeness ####
-  site_completeness <- iNEXT_sites$AsyEst %>%
-    filter(Diversity == "Species richness") %>%
-    mutate(
-      completeness = Observed / Estimator,
-      Year = i
-    )
-  
-  #### Append completeness ####
-  all_completeness <- bind_rows(
-    all_completeness,
-    site_completeness
-  )
-  
-  #### Calculate abundance summaries ####
-  abundance_summary <- df_counts %>%
-    group_by(siteID) %>%
-    summarise(
-      total_abundance = sum(count_est, na.rm = TRUE),
-      richness = n_distinct(Species),
-      Year = i,
-      .groups = "drop"
-    )
-  
-  #### Append abundance ####
-  all_abundance <- bind_rows(
-    all_abundance,
-    abundance_summary
-  )
-  
-}
+# for(i in 2018:2025){
+#   
+#   cat("Processing year:", i, "\n")
+#   
+#   #### Filter yearly data ####
+#   df_counts <- df %>%
+#     filter(
+#       !is.na(Species),
+#       variable_name == "abundance",
+#       observation_datetime >= paste0(i, "-01-01"),
+#       observation_datetime <= paste0(i, "-12-31")
+#     ) %>%
+#     mutate(
+#       trappingDays = as.numeric(trappingDays),
+#       count_est = round(value * trappingDays)
+#     )
+#   
+#   #### Skip years with no data ####
+#   if(nrow(df_counts) == 0){
+#     next
+#   }
+#   
+#   #### Build site list for iNEXT ####
+#   site_list <- df_counts %>%
+#     group_by(siteID, Species) %>%
+#     summarise(abundance = sum(count_est), .groups = "drop") %>%
+#     group_split(siteID) %>%
+#     setNames(unique(
+#       df_counts %>%
+#         arrange(siteID) %>%
+#         pull(siteID) %>%
+#         unique()
+#     )) %>%
+#     lapply(function(x) x$abundance[x$abundance > 0])
+#   
+#   #### Run iNEXT ####
+#   iNEXT_sites <- iNEXT(
+#     site_list,
+#     q = 0,
+#     datatype = "abundance"
+#   )
+#   
+#   #### Create rarefaction plot ####
+#   p <- ggiNEXT(iNEXT_sites, type = 1) +
+#     theme_pubr() +
+#     xlab("Number of Individuals") +
+#     scale_x_continuous(labels = scales::label_number(accuracy = 1)) +
+#     theme(legend.position = "none") +
+#     facet_wrap(. ~ Assemblage, nrow = 4, scales = "free")
+#   
+#   #### Save plot ####
+#   png(
+#     filename = paste0("./Figures/Rarefaction/Rarefaction_", i, ".png"),
+#     width = 20,
+#     height = 6,
+#     units = "in",
+#     res = 300
+#   )
+#   
+#   print(p)
+#   
+#   dev.off()
+#   
+#   #### Extract completeness ####
+#   site_completeness <- iNEXT_sites$AsyEst %>%
+#     filter(Diversity == "Species richness") %>%
+#     mutate(
+#       completeness = Observed / Estimator,
+#       Year = i
+#     )
+#   
+#   #### Append completeness ####
+#   all_completeness <- bind_rows(
+#     all_completeness,
+#     site_completeness
+#   )
+#   
+#   #### Calculate abundance summaries ####
+#   abundance_summary <- df_counts %>%
+#     group_by(siteID) %>%
+#     summarise(
+#       total_abundance = sum(count_est, na.rm = TRUE),
+#       richness = n_distinct(Species),
+#       Year = i,
+#       .groups = "drop"
+#     )
+#   
+#   #### Append abundance ####
+#   all_abundance <- bind_rows(
+#     all_abundance,
+#     abundance_summary
+#   )
+#   
+# }
 
 
 df_counts <- df %>%
@@ -159,21 +159,23 @@ iNEXT_sitesByYear <- iNEXT(
 )
 
 png(filename = paste0("./Figures/Rarefaction/Rarefaction_yearsStacked.png"),
-  width = 22,
-  height = 10,
+  width = 12,
+  height = 14,
   units = "in",
   res = 300)
 ggiNEXT(iNEXT_sitesByYear, type = 1)  + 
   aes(colour = substr(Assemblage, 6, 9), x=(x/100))+
   theme_pubr() +
+  # scale_color_brewer(palette = "Dark2") +
   xlab("Number of Individuals (x100)") +
   scale_shape_manual(values=c(rep(4,length(siteyear_list)))) +
   scale_fill_manual(values = c(rep("grey",523)))+
   scale_x_continuous(labels = scales::label_number(accuracy = 1),
                      breaks = breaks_extended(n = 4)) +
-  theme(legend.position = "none") +
-  facet_wrap(.~substr(Assemblage, 1, 4), nrow=4, scale="free")
-dev.off()
+  # theme(legend.position = "none") +
+  guides(shape = "none", size = "none", fill = "none") +
+  facet_wrap(.~substr(Assemblage, 1, 4), nrow=7, scale="free")
+ dev.off()
 
 all_completeness <- iNEXT_sitesByYear$AsyEst %>%
   filter(Diversity == "Species richness") %>%
@@ -200,6 +202,23 @@ site_list <- df_counts %>%
 iNEXT_sites <- iNEXT(site_list,
                      q = 0,
                      datatype = "abundance")
+
+png(filename = paste0("./Figures/Rarefaction/Rarefaction_sitesYearOverYear.png"),
+    width = 12,
+    height = 14,
+    units = "in",
+    res = 300)
+ggiNEXT(iNEXT_sites, type = 1)  + 
+  aes(x=(x/100))+
+  theme_pubr() +
+  xlab("Number of Individuals (x100)") +
+  scale_shape_manual(values=c(rep(4,length(siteyear_list)))) +
+  scale_x_continuous(labels = scales::label_number(accuracy = 1),
+                     breaks = breaks_extended(n = 4)) +
+  # theme(legend.position = "none") +
+  guides(shape = "none", size = "none", fill = "none", col = "none") +
+  facet_wrap(.~substr(Assemblage, 1, 4), nrow=7, scale="free_x")
+dev.off()
 
 unconstrained_completeness <- iNEXT_sites$AsyEst %>%
   filter(Diversity == "Species richness") %>%
@@ -237,9 +256,24 @@ plot_dat <- all_completeness %>%
     names_to = "Metric",
     values_to = "Richness")
 
+#Estimate inverse-variance weighted mean across years
+site_year_summary <- all_completeness %>%
+  group_by(Assemblage) %>%
+  summarise(
+    median_completeness = median(completeness),
+    median_richness = median(Estimator),
+    median_lcl      = median(LCL),
+    median_ucl      = median(UCL),
+    n_years         = n(),
+    .groups = "drop"
+  )
+
+all_completeness$Year<-as.numeric(all_completeness$Year)
+
+
 png(filename = paste0("./Figures/Rarefaction/Rarefaction_yearsEstimates.png"),
-    width = 22,
-    height = 10,
+    width = 12,
+    height = 14,
     units = "in",
     res = 300)
 ggplot(all_completeness, aes(x = Year)) +
@@ -250,23 +284,48 @@ ggplot(all_completeness, aes(x = Year)) +
   geom_errorbar(aes(ymin = LCL, ymax = UCL, colour = completeness), width = 0.2) +
   geom_hline(data = unconstrained_completeness, 
              aes(yintercept = Estimator, colour = completeness), linetype = "dashed") +
-  facet_wrap(. ~ Assemblage, scales = "free_y") +
+  # geom_hline(data = site_year_summary, 
+  #            aes(yintercept = median_richness), colour = "black", linetype = "dashed") +
+  geom_point(data = site_year_summary, 
+             aes(y = median_richness, x=2020.5), colour = "black", shape = 15, size = 3) +
+  geom_errorbar(data = site_year_summary,
+                aes(ymin = median_lcl, ymax = median_ucl, x=2020.5), width = 0.2) +
+  facet_wrap(. ~ Assemblage, scales = "free_y", nrow=7) +
   theme_pubr() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   ylab("Species Richness")+
   scale_color_viridis()
 dev.off()
 
-#Estimate inverse-variance weighted mean across years
-site_year_summary <- all_completeness %>%
-  group_by(Assemblage) %>%
-  summarise(
-    median_richness = median(Estimator),
-    median_lcl      = median(LCL),
-    median_ucl      = median(UCL),
-    n_years         = n(),
-    .groups = "drop"
-  )
+completenessCompare<-cbind(site_year_summary, unconstrained_completeness)
+plot(completenessCompare$median_completeness,completenessCompare$completeness)
+abline(a=0, b=1)
+
+completenessCompare$diff<-completenessCompare$Estimator-completenessCompare$median_richness
+plot(completenessCompare$completeness~completenessCompare$diff)
+
+ggpubr::ggarrange(ggplot(completenessCompare[,c("completeness","median_completeness")], aes(y=median_completeness, x=completeness)) +
+                    geom_point() +
+                    theme_pubr() +
+                    xlab("Year over Year Completeness") +
+                    ylab("Median Annual Completeness"),
+                  ggplot(completenessCompare[,c("completeness","diff")], aes(y=diff, x=completeness)) +
+                    geom_point() +
+                    theme_pubr() +
+                    xlab("Year over Year Completeness") +
+                    ylab("Year over Year Estimate - Median Annual Estimate"),
+                  nrow = 1)
+
+completenessCompare$completenessDiff<-completenessCompare$completeness-completenessCompare$median_completeness
+max(completenessCompare$completenessDiff)
+max(completenessCompare$diff)
+min(completenessCompare$diff)
+mean(completenessCompare$diff)
+
 
 #### Export final outputs ####
 write.csv(site_year_summary, "./Site_annualVarWeightedMean_EstimatedSppRichness.csv")
+
+outTable<-completenessCompare[,c("Assemblage","median_completeness","completeness","completenessDiff","median_richness","Estimator","diff")]
+colnames(outTable)<-c("Site","AnnualCompleteness", "YearOverYearCompleteness", "completenessDiff","AnnualMedianRichness","YearOverYearRichness","RichnessDiff")
+write.csv(outTable, "./Site_CompletnessCompare.csv")

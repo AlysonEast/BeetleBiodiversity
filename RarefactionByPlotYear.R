@@ -8,7 +8,7 @@ library(ggplot2)
 library(ggpubr)
 library(viridis)
 
-setwd("/home/aly/Beetles/Biodiversity")
+setwd("/home/aly/Beetles/BeetleBiodiversity")
 
 data(data_beetle)
 
@@ -118,6 +118,7 @@ siteList<-sort(unique(all_completeness$SiteID))
 plot_year_summary <- all_completeness %>%
   group_by(SiteID, PlotID) %>%
   summarise(
+    median_completness = median(completeness),
     median_richness = median(Estimator),
     median_lcl      = median(LCL),
     median_ucl      = median(UCL),
@@ -138,7 +139,7 @@ for (i in 1:length(siteList)) {
     geom_point(aes(y = Estimator, colour = completeness), size = 3) +
     geom_line(aes(y = Estimator, group = 1), colour = "black", alpha = 0.5) +
     geom_errorbar(aes(ymin = LCL, ymax = UCL, colour = completeness), width = 0.2) +
-    facet_wrap(. ~ PlotID) +
+    facet_wrap(. ~ PlotID, nrow = 2) +
     geom_hline(data = subset(plot_year_summary, SiteID==siteList[i]), 
                aes(yintercept = median_richness)) +
     geom_hline(data = subset(plot_year_summary, SiteID==siteList[i]), 
@@ -153,7 +154,63 @@ for (i in 1:length(siteList)) {
   dev.off()
 }
 
+#### Year over year
+df_counts <- df %>%
+  filter(!is.na(Species),
+         variable_name == "abundance",
+         observation_datetime >= paste0("2018-01-01"),
+         observation_datetime <= paste0("2025-12-31")) %>%
+  mutate(trappingDays = as.numeric(trappingDays),
+         count_est = round(value * trappingDays))
 
+site_list <- df_counts %>%
+  group_by(plotID, Species) %>%
+  summarise(abundance = sum(count_est), .groups = "drop") %>%
+  group_split(plotID) %>%
+  setNames(sort(unique(df_counts$plotID))) %>%
+  lapply(function(x) x$abundance[x$abundance > 0])
+
+iNEXT_sites <- iNEXT(site_list,
+                     q = 0,
+                     datatype = "abundance")
+
+png(filename = paste0("./Figures/Rarefaction/Rarefaction_plotsYearOverYear.png"),
+    width = 10,
+    height = 10,
+    units = "in",
+    res = 300)
+ggiNEXT(iNEXT_sites, type = 1)  + 
+  aes(x=(x/100))+
+  theme_pubr() +
+  xlab("Number of Individuals (x100)") +
+  scale_shape_manual(values=c(rep(4,length(site_list)))) +
+  scale_x_continuous(labels = scales::label_number(accuracy = 1),
+                     breaks = breaks_extended(n = 4),
+                     expand = c(0,0)) +
+  xlim(0,75) +
+  # theme(legend.position = "none") +
+  guides(shape = "none", size = "none", fill = "none", col = "none") 
+dev.off()
+
+#Completeness
+unconstrained_completeness <- iNEXT_sites$AsyEst %>%
+  filter(Diversity == "Species richness") %>%
+  mutate(completeness = Observed / Estimator)
+
+summary(all_completeness$completeness)
+
+summary(unconstrained_completeness$completeness)
+
+summary(plot_year_summary$median_completness)
+
+ggarrange(
+  ggplot(unconstrained_completeness, aes(x=completeness)) +
+    geom_histogram() +
+    xlim(0,1.1) + ylim(0,100),
+  ggplot(plot_year_summary, aes(x=median_completness)) +
+    geom_histogram() +
+    xlim(0,1.1) + ylim(0,100),
+  ncol = 1)
 
 #### Export final outputs ####
 write.csv(plot_year_summary, "./plot_annualVarWeightedMean_EstimatedSppRichness.csv")
