@@ -2,6 +2,8 @@ install.packages("neonDivData", repos = 'https://daijiang.r-universe.dev')
 library(neonDivData)
 library(dplyr)
 
+setwd("/home/aly/Beetles/BeetleBiodiversity")
+
 # df<-data_beetle
 # df<-merge(data_beetle, neon_sites, by="siteID")
 
@@ -137,6 +139,21 @@ ggarrange(
   )
 dev.off()
 
+ggplot(df_site, aes(x=Latitude, y=median_richness)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = median_lcl, ymax = median_ucl), width = 0.1) +
+  theme_pubr() +
+  xlab("Latitude") +
+  ylab("Species Richness") + 
+  ggtitle("Site Level Species Richness")
+ggplot(df_plot, aes(x=jitter(latitude, 5), y=median_richness)) +
+  geom_point(alpha=0.5) +
+  geom_errorbar(aes(ymin = median_lcl, ymax = median_ucl), width = 0.1, alpha=0.5) +
+  theme_pubr() +
+  xlab("Latitude") +
+  ylab("Species Richness") + 
+  ggtitle("Plot Level Species Richness")
+
 ggplot(df_plot, aes(x=latitude, y=median_completness, colour = median_richness)) +
   geom_point() +
   theme_pubr() +
@@ -151,12 +168,14 @@ ggplot() +
     geom_polygon(data = states, aes(x = long, y = lat, group = group),
                  fill = NA, color = "gray80", linewidth = 0.4) +
     geom_point(data = df_plot,
-               aes(x = longitude, y = latitude, color = median_completness),
-               size = 3) +
+               aes(x = jitter(longitude, 300), y = jitter(latitude, 300), color = median_completness),
+               size = 3,
+               shape = 0, 
+               stroke = 2) +
     scale_color_viridis_c(option = "plasma") +
     coord_cartesian(
       xlim = c(x_range[1] - x_pad, x_range[2] + x_pad),
       ylim = c(y_range[1] - y_pad, y_range[2] + y_pad)
     ) +
-    labs(x = "Longitude", y = "Latitude", color = "Site Species\nRichness") +
+    labs(x = "Longitude", y = "Latitude", color = "Site Rarefaction\nCompletness") +
     theme_pubr() 

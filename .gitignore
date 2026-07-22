@@ -1,0 +1,15 @@
+# R session/history artifacts (local only, no analytical value)
+.Rhistory
+.Rproj.user/
+.RData
+.Ruserdata
+
+# OS cruft
+.DS_Store
+
+# Generated figures and derived data products (archived separately, e.g.
+# Zenodo/OSF, alongside the manuscript; regenerate via the R scripts, see README)
+Figures/
+Site_annualVarWeightedMean_EstimatedSppRichness.csv
+plot_annualVarWeightedMean_EstimatedSppRichness.csv
+Site_CompletnessCompare.csv
