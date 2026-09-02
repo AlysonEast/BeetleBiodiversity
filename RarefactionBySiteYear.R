@@ -183,6 +183,8 @@ all_completeness <- iNEXT_sitesByYear$AsyEst %>%
 all_completeness$Year<-substr(all_completeness$Assemblage, 6, 9)
 all_completeness$Assemblage<-substr(all_completeness$Assemblage, 1, 4)
 
+write.csv(all_completeness, "./site_annual_EstimatedSppRichness.csv")
+
 #### All Years ####
 df_counts <- df %>%
   filter(!is.na(Species),
