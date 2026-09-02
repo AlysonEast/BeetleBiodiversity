@@ -214,3 +214,4 @@ ggarrange(
 
 #### Export final outputs ####
 write.csv(plot_year_summary, "./plot_annualVarWeightedMean_EstimatedSppRichness.csv")
+write.csv(all_completeness, "./plot_annual_EstimatedSppRichness.csv")

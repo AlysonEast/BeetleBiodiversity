@@ -1,4 +1,4 @@
-install.packages("neonDivData", repos = 'https://daijiang.r-universe.dev')
+# install.packages("neonDivData", repos = 'https://daijiang.r-universe.dev')
 library(neonDivData)
 library(dplyr)
 
@@ -146,13 +146,95 @@ ggplot(df_site, aes(x=Latitude, y=median_richness)) +
   xlab("Latitude") +
   ylab("Species Richness") + 
   ggtitle("Site Level Species Richness")
-ggplot(df_plot, aes(x=jitter(latitude, 5), y=median_richness)) +
-  geom_point(alpha=0.5) +
+ggplot(df_plot, aes(x=jitter(latitude, 5), y=median_richness, colour = median_completness)) +
+  geom_point() +
   geom_errorbar(aes(ymin = median_lcl, ymax = median_ucl), width = 0.1, alpha=0.5) +
   theme_pubr() +
   xlab("Latitude") +
   ylab("Species Richness") + 
+  geom_smooth(color = "red") +
   ggtitle("Plot Level Species Richness")
+
+df_site$siteID<-df_site$Assemblage
+ggplot(df_site, aes(y=median_richness, x=siteID)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = median_lcl, ymax = median_ucl), width = 0.1) +
+  geom_point(data=df_plot, aes(y=median_richness, x=siteID), col="blue") +
+  geom_errorbar(data=df_plot, aes(ymin = median_lcl, ymax = median_ucl), width = 0.1, col="blue", aplpha=0.5) +
+  theme_pubr() 
+
+site_order <- df_plot %>%
+  group_by(siteID) %>%
+  summarise(latitude = mean(latitude, na.rm = TRUE)) %>%
+  arrange(latitude) %>%
+  pull(siteID)
+
+df_plot$siteID <- factor(df_plot$siteID, levels = site_order)
+df_site$siteID <- factor(df_site$siteID, levels = site_order)
+
+ggplot() +
+  geom_point(
+    data = df_plot,
+    aes(x = siteID, y = median_richness),
+    position = position_jitter(width = 0.18, height = 0),
+    alpha = 0.35,
+    size = 1.5,
+    col = "darkred"
+  ) +
+  geom_errorbar(
+    data = df_site,
+    aes(x = siteID, ymin = median_lcl, ymax = median_ucl),
+    width = 0.15,
+    linewidth = 0.8
+  ) +
+  geom_point(
+    data = df_site,
+    aes(x = siteID, y = median_richness),
+    size = 3.5,
+    shape = 21,
+    fill = "white",
+    stroke = 1.2
+  ) +
+  theme_pubr() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  labs(
+    x = "Site (ordered by Latitude)",
+    y = "Median richness"
+  )
+
+ggplot() +
+  geom_point(
+    data = df_plot,
+    aes(x = latitude, y = median_richness),
+    position = position_jitter(width = 0.18, height = 0),
+    alpha = 0.35,
+    size = 1.5,
+    col = "darkred"
+  ) +
+  geom_errorbar(
+    data = df_site,
+    aes(x = Latitude, ymin = median_lcl, ymax = median_ucl),
+    width = 0.15,
+    linewidth = 0.8
+  ) +
+  geom_point(
+    data = df_site,
+    aes(x = Latitude, y = median_richness),
+    size = 3.5,
+    shape = 21,
+    fill = "white",
+    stroke = 1.2
+  ) +
+  theme_pubr() +
+  labs(
+    x = "Latitude",
+    y = "Median richness"
+  )
+
 
 ggplot(df_plot, aes(x=latitude, y=median_completness, colour = median_richness)) +
   geom_point() +
